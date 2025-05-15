@@ -74,9 +74,57 @@
       background: #fff;
       color: #333;
     }
+
+    /* Triple dot menu */
+    .menu {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Side ribbon */
+    .side-ribbon {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 280px;
+      height: 100%;
+      background: #f9f9f9;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+      padding: 20px;
+      transition: right 0.3s ease;
+      text-align: left;
+    }
+
+    .side-ribbon.open {
+      right: 0;
+    }
+
+    .side-ribbon h3 {
+      margin-top: 0;
+    }
+
+    .side-ribbon button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      background-color: #2196F3;
+    }
   </style>
 </head>
 <body>
+  <div class="menu" onclick="toggleMenu()">⋮</div>
+
+  <div class="side-ribbon" id="ribbon">
+    <h3>Export Logs</h3>
+    <button onclick="exportCSV()">📊 Download CSV</button>
+    <button onclick="exportPDF()">📄 Download PDF</button>
+    <button style="background-color: #f44336;" onclick="toggleMenu()">Close ✖</button>
+  </div>
+
   <div class="container">
     <h1>Work Time Logger</h1>
 
@@ -98,8 +146,10 @@
 
   <div class="footer">Thank you Jesus Christ</div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     let workStartTime = null;
+    let taskLog = [];
 
     function punch(type) {
       const now = new Date();
@@ -110,6 +160,7 @@
         const diffMs = now - workStartTime;
         const hours = (diffMs / (1000 * 60 * 60)).toFixed(2);
         document.getElementById('workTime').innerText = `Total work time: ${hours} hours`;
+        taskLog.push({ task: 'Overall Work', duration: hours });
         workStartTime = null;
       }
     }
@@ -144,7 +195,9 @@
         if (taskStartTime) {
           const end = new Date();
           const diff = (end - taskStartTime) / (1000 * 60 * 60);
-          timeDisplay.innerText = `Task duration: ${diff.toFixed(2)} hours`;
+          const duration = diff.toFixed(2);
+          timeDisplay.innerText = `Task duration: ${duration} hours`;
+          taskLog.push({ task: taskText, duration });
           taskStartTime = null;
         }
       };
@@ -167,6 +220,35 @@
 
       document.getElementById('taskList').appendChild(taskDiv);
       taskInput.value = '';
+    }
+
+    function toggleMenu() {
+      document.getElementById('ribbon').classList.toggle('open');
+    }
+
+    function exportCSV() {
+      let csv = "Task,Duration (hrs)\n";
+      taskLog.forEach(item => {
+        csv += `${item.task},${item.duration}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'time-log.csv';
+      link.click();
+    }
+
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(14);
+      doc.text("Time Log Report", 20, 20);
+      let y = 40;
+      taskLog.forEach((item, index) => {
+        doc.text(`${index + 1}. ${item.task}: ${item.duration} hrs`, 20, y);
+        y += 10;
+      });
+      doc.save('time-log.pdf');
     }
   </script>
 </body>
