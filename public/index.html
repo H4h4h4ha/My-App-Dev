@@ -2,242 +2,590 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Time Logger</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Time Tracker App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Comfortaa', cursive;
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
+      background-color: #f2faff;
+      color: #222;
+      text-align: center;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
-      background-color: #f0f0f0;
     }
-
-    header, footer {
-      background-color: #222;
+    header {
+      padding: 1em 3em 1em 3.5em;
+      background: linear-gradient(to right, #36d1dc, #5b86e5);
       color: white;
-      padding: 1em;
-      text-align: center;
-    }
-
-    main {
-      flex: 1;
-      padding: 2em;
-    }
-
-    .input-box {
-      display: flex;
-      gap: 1em;
-      margin-bottom: 1em;
-    }
-
-    .task-list .task {
-      background: white;
-      border: 1px solid #ccc;
-      padding: 1em;
-      margin-bottom: 1em;
+      font-size: 2em;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 100vw;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 15;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      border-radius: 8px;
+      justify-content: center;
+      box-sizing: border-box;
     }
-
-    .task div {
-      margin-right: 1em;
+    main {
+      padding: 6em 1em 1.5em 1em;
+      flex-grow: 1;
+      max-width: 600px;
+      margin: auto;
+      width: 100%;
     }
-
-    .task button {
-      padding: 0.5em 1em;
-      margin-left: 0.5em;
-    }
-
-    .timer, .duration {
-      min-width: 120px;
-      text-align: center;
-    }
-
-    .export-box {
-      position: absolute;
-      top: 50px;
-      right: 10px;
-      background: white;
-      border: 1px solid #ccc;
-      padding: 0.5em;
-      display: none;
-    }
-
     .three-dot {
-      position: absolute;
-      top: 10px;
-      right: 10px;
+      position: fixed;
+      top: 20px;
+      left: 15px;
+      font-size: 2em;
       cursor: pointer;
-      font-size: 1.5em;
+      background-color: rgba(0,0,0,0.05);
+      border-radius: 50%;
+      padding: 5px 10px;
+      user-select: none;
+      z-index: 20;
+      transition: background-color 0.3s ease;
+    }
+    .three-dot:hover {
+      background-color: rgba(0,0,0,0.12);
+    }
+    .overall-timer-box {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+      max-width: 600px;
+      margin: 1em auto;
+      padding: 1em 1.5em;
+      font-size: 1.2em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1em;
+      color: #00a18c;
+      font-weight: 700;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+    }
+    .overall-timer-box button {
+      min-width: 80px;
+      font-size: 0.9em;
+      border-radius: 15px;
+      border: none;
+      background: #60c7b8;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      padding: 0.4em 1em;
+    }
+    .overall-timer-box button:disabled {
+      background: #a8d8d5;
+      cursor: not-allowed;
+    }
+    .overall-timer-box button:hover:not(:disabled) {
+      background-color: #3ba396;
+    }
+    #nameInputBox {
+      margin: 1em auto 1.5em auto;
+      max-width: 600px;
+      display: flex;
+      justify-content: center;
+      gap: 0.8em;
+      flex-wrap: wrap;
+    }
+    #nameInputBox input {
+      font-size: 1.2em;
+      padding: 0.4em 0.8em;
+      border-radius: 15px;
+      border: 1.8px solid #5b86e5;
+      outline: none;
+      width: 200px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+    #nameInputBox input:focus {
+      border-color: #36d1dc;
+    }
+    #nameInputBox button {
+      font-size: 1.1em;
+      padding: 0.4em 1em;
+      border-radius: 15px;
+      border: none;
+      background: #5b86e5;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      min-width: 110px;
+    }
+    #nameInputBox button:hover {
+      background-color: #3a5ab8;
+    }
+    #displayName {
+      font-weight: 700;
+      font-size: 1.4em;
+      margin-bottom: 1em;
+      color: #2b3a67;
+    }
+    #taskInputBox {
+      margin: 1em auto 1.5em auto;
+      max-width: 600px;
+      display: flex;
+      justify-content: center;
+      gap: 0.8em;
+      flex-wrap: wrap;
+    }
+    #taskInputBox input {
+      font-size: 1.2em;
+      padding: 0.4em 0.8em;
+      border-radius: 15px;
+      border: 1.8px solid #36d1dc;
+      outline: none;
+      width: 250px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+    #taskInputBox input:focus {
+      border-color: #5b86e5;
+    }
+    #taskInputBox button {
+      font-size: 1.1em;
+      padding: 0.4em 1em;
+      border-radius: 15px;
+      border: none;
+      background: #36d1dc;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      min-width: 110px;
+    }
+    #taskInputBox button:hover {
+      background-color: #2a95b5;
+    }
+    #tasksContainer {
+      max-width: 600px;
+      margin: 0 auto 3em auto;
+      text-align: left;
+    }
+    .taskItem {
+      background: #ffffff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.07);
+      border-radius: 15px;
+      padding: 1em 1.5em;
+      margin-bottom: 1em;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1em;
+      font-size: 1.1em;
+      color: #2b3a67;
+      position: relative;
+    }
+    .taskName {
+      flex-grow: 1;
+      font-weight: 600;
+      user-select: none;
+    }
+    .taskTimer {
+      font-family: monospace;
+      color: #00a18c;
+      font-weight: 700;
+      min-width: 90px;
+      text-align: center;
+      user-select: none;
+    }
+    .taskControls button {
+      border-radius: 15px;
+      border: none;
+      background: #60c7b8;
+      color: white;
+      cursor: pointer;
+      padding: 0.3em 0.8em;
+      min-width: 80px;
+      font-size: 0.95em;
+      transition: background-color 0.3s ease;
+      margin-right: 0.5em;
+    }
+    .taskControls button:hover {
+      background-color: #3ba396;
+    }
+    .taskCloseBtn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #e76f51;
+      padding: 0 8px;
+      font-weight: 700;
+      font-size: 1.2em;
+      line-height: 1;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .taskCloseBtn:hover {
+      background-color: #bf4a34;
+    }
+    #exportBox {
+      position: fixed;
+      top: 60px;
+      left: 15px;
+      background: rgba(255 255 255 / 0.95);
+      border-radius: 15px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+      padding: 1em 1.5em;
+      z-index: 30;
+      display: none;
+      width: 180px;
+      text-align: center;
+      font-weight: 600;
+      color: #2b3a67;
+      user-select: none;
+    }
+    #exportBox button {
+      width: 100%;
+      margin: 0.5em 0;
+      font-size: 1.05em;
+      border-radius: 15px;
+      border: none;
+      background: #5b86e5;
+      color: white;
+      cursor: pointer;
+      padding: 0.5em 0;
+      transition: background-color 0.3s ease;
+    }
+    #exportBox button:hover {
+      background-color: #3a5ab8;
+    }
+    footer {
+      padding: 0.8em 0;
+      font-weight: 600;
+      color: #666;
+      background: #e0e7ff;
+      user-select: none;
+    }
+    @media (max-width: 640px) {
+      header {
+        font-size: 1.5em;
+        padding-left: 4em;
+      }
+      .three-dot {
+        top: 15px;
+        left: 12px;
+        font-size: 1.7em;
+      }
+      #nameInputBox input, #taskInputBox input {
+        width: 100%;
+        max-width: none;
+      }
+      #nameInputBox, #taskInputBox {
+        flex-direction: column;
+      }
+      .overall-timer-box {
+        font-size: 1em;
+        padding: 1em;
+        gap: 0.5em;
+      }
+      .overall-timer-box button {
+        min-width: 70px;
+        font-size: 0.85em;
+        padding: 0.35em 0.8em;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="three-dot" onclick="toggleExportBox()">&#8942;</div>
-  <div class="theme-toggle">
-    <button onclick="toggleTheme()">Toggle Theme</button>
-  </div>
-  <div class="export-box" id="exportBox">
-    <button onclick="exportPDF()">Export PDF</button>
-    <button onclick="exportCSV()">Export CSV</button>
-  </div>
-
+  <div class="three-dot" id="menuToggle" onclick="toggleExportBox()">&#8942;</div>
   <header>Time Tracker App</header>
   <main>
-    <div class="input-box">
+    <div id="nameInputBox">
       <input type="text" id="nameInput" placeholder="Enter your name" />
-      <button onclick="saveName()">Set Name</button>
-      <div id="displayName"></div>
+      <button id="setNameBtn" onclick="setName()">Set Name</button>
+    </div>
+    <div id="displayName" style="display:none;"></div>
+
+    <div class="overall-timer-box">
+      <span>Overall Timer:</span>
+      <span id="overallTimerDisplay">00:00:00</span>
+      <button id="overallPunchInBtn" onclick="overallPunchIn()">Punch In</button>
+      <button id="overallPunchOutBtn" onclick="overallPunchOut()" disabled>Punch Out</button>
     </div>
 
-    <div class="input-box">
-      <input type="text" id="taskInput" placeholder="New Task" />
+    <div id="taskInputBox">
+      <input type="text" id="taskInput" placeholder="Add a new task" />
       <button onclick="addTask()">Add Task</button>
     </div>
 
-    <div id="overallTimeDisplay" style="margin: 1em 0; font-weight: bold;">Overall Time: 0.00 hrs</div>
+    <div id="tasksContainer"></div>
 
-    <div class="task-list" id="taskContainer"></div>
+    <div id="exportBox">
+      <button onclick="exportPDF()">Save as PDF</button>
+      <button onclick="exportCSV()">Save as CSV</button>
+    </div>
   </main>
-
   <footer>Thank you Jesus Christ</footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     let currentName = "";
-    let overallDuration = 0;
+    let overallPunchInTime = null;
+    let overallElapsed = 0;
+    let overallTimerInterval = null;
+    let taskLog = [];
 
-    function toggleExportBox() {
-      const box = document.getElementById("exportBox");
-      box.style.display = box.style.display === "block" ? "none" : "block";
+    function formatSecondsToHHMMSS(seconds) {
+      const h = Math.floor(seconds / 3600).toString().padStart(2,'0');
+      const m = Math.floor((seconds % 3600) / 60).toString().padStart(2,'0');
+      const s = (seconds % 60).toString().padStart(2,'0');
+      return `${h}:${m}:${s}`;
     }
 
-    function toggleTheme() {
-      document.body.classList.toggle("dark");
+    function setName() {
+      const input = document.getElementById("nameInput");
+      if (input.value.trim() === "") {
+        alert("Please enter your name.");
+        return;
+      }
+      currentName = input.value.trim();
+      document.getElementById("displayName").textContent = `User: ${currentName}`;
+      document.getElementById("displayName").style.display = "block";
+      input.value = "";
+      input.disabled = true;
+      document.getElementById("setNameBtn").textContent = "Change Name";
+      document.getElementById("setNameBtn").onclick = () => {
+        input.disabled = false;
+        input.focus();
+        document.getElementById("setNameBtn").textContent = "Set Name";
+        document.getElementById("setNameBtn").onclick = setName;
+        document.getElementById("displayName").style.display = "none";
+      };
     }
 
-    function saveName() {
-      currentName = document.getElementById("nameInput").value.trim();
-      document.getElementById("displayName").textContent = `Hello, ${currentName}`;
+    function overallPunchIn() {
+      if (overallPunchInTime) return;
+      overallPunchInTime = Date.now();
+      document.getElementById("overallPunchInBtn").disabled = true;
+      document.getElementById("overallPunchOutBtn").disabled = false;
+      startOverallTimer();
     }
 
-    function updateOverallTime() {
-      document.getElementById("overallTimeDisplay").textContent = `Overall Time: ${overallDuration.toFixed(2)} hrs`;
+    function overallPunchOut() {
+      if (!overallPunchInTime) return;
+      const now = Date.now();
+      overallElapsed += Math.floor((now - overallPunchInTime) / 1000);
+      overallPunchInTime = null;
+      document.getElementById("overallPunchInBtn").disabled = false;
+      document.getElementById("overallPunchOutBtn").disabled = true;
+      stopOverallTimer();
+      updateOverallTimerDisplay();
+    }
+
+    function startOverallTimer() {
+      if (overallTimerInterval) return;
+      overallTimerInterval = setInterval(() => {
+        const now = Date.now();
+        const elapsed = overallElapsed + (overallPunchInTime ? Math.floor((now - overallPunchInTime)/1000) : 0);
+        document.getElementById("overallTimerDisplay").textContent = formatSecondsToHHMMSS(elapsed);
+      }, 1000);
+    }
+
+    function stopOverallTimer() {
+      clearInterval(overallTimerInterval);
+      overallTimerInterval = null;
+    }
+
+    function updateOverallTimerDisplay() {
+      const total = overallElapsed + (overallPunchInTime ? Math.floor((Date.now() - overallPunchInTime)/1000) : 0);
+      document.getElementById("overallTimerDisplay").textContent = formatSecondsToHHMMSS(total);
     }
 
     function addTask() {
       const taskInput = document.getElementById("taskInput");
-      const taskText = taskInput.value.trim();
-      if (!taskText) return;
-      const taskEl = document.createElement("div");
-      taskEl.className = "task";
-      taskEl.innerHTML = `
-        <div><strong>${taskText}</strong></div>
-        <button onclick="punchIn(this)">Punch In</button>
-        <button onclick="punchOut(this)">Punch Out</button>
-        <input type="checkbox" /> Completed
-        <button onclick="this.parentElement.remove()">Close</button>
-        <div class="duration">Duration: 0.00 hrs</div>
-        <div class="timer">00:00:00</div>
-      `;
-      document.getElementById("taskContainer").appendChild(taskEl);
+      const taskName = taskInput.value.trim();
+      if (!taskName) {
+        alert("Please enter a task name.");
+        return;
+      }
+      const newTask = {
+        id: Date.now(),
+        name: taskName,
+        punchInTime: null,
+        elapsed: 0,
+        timerInterval: null,
+      };
+      taskLog.push(newTask);
       taskInput.value = "";
-      taskInput.focus();
+      renderTasks();
     }
 
-    function punchIn(btn) {
-      const parent = btn.parentElement;
-      const timerEl = parent.querySelector(".timer");
-      const startTime = Date.now();
-      btn.dataset.time = startTime;
-      if (btn.timerInterval) clearInterval(btn.timerInterval);
-      btn.timerInterval = setInterval(() => {
-        const diff = Date.now() - startTime;
-        const hrs = String(Math.floor(diff / 3600000)).padStart(2, '0');
-        const mins = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-        const secs = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-        timerEl.textContent = `${hrs}:${mins}:${secs}`;
+    function renderTasks() {
+      const container = document.getElementById("tasksContainer");
+      container.innerHTML = "";
+      taskLog.forEach(task => {
+        const div = document.createElement("div");
+        div.className = "taskItem";
+        div.id = "task-" + task.id;
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "taskName";
+        nameSpan.textContent = task.name;
+
+        const timerSpan = document.createElement("span");
+        timerSpan.className = "taskTimer";
+        timerSpan.id = `timer-${task.id}`;
+        timerSpan.textContent = formatSecondsToHHMMSS(task.elapsed);
+
+        const controlsDiv = document.createElement("div");
+        controlsDiv.className = "taskControls";
+
+        const punchInBtn = document.createElement("button");
+        punchInBtn.textContent = "Punch In";
+        punchInBtn.onclick = () => taskPunchIn(task.id);
+        punchInBtn.disabled = task.punchInTime !== null;
+
+        const punchOutBtn = document.createElement("button");
+        punchOutBtn.textContent = "Punch Out";
+        punchOutBtn.onclick = () => taskPunchOut(task.id);
+        punchOutBtn.disabled = task.punchInTime === null;
+
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "×";
+        closeBtn.className = "taskCloseBtn";
+        closeBtn.title = "Remove task";
+        closeBtn.onclick = () => removeTask(task.id);
+
+        controlsDiv.appendChild(punchInBtn);
+        controlsDiv.appendChild(punchOutBtn);
+
+        div.appendChild(nameSpan);
+        div.appendChild(timerSpan);
+        div.appendChild(controlsDiv);
+        div.appendChild(closeBtn);
+
+        container.appendChild(div);
+      });
+    }
+
+    function taskPunchIn(taskId) {
+      const task = taskLog.find(t => t.id === taskId);
+      if (!task || task.punchInTime !== null) return;
+      task.punchInTime = Date.now();
+      task.timerInterval = setInterval(() => {
+        const now = Date.now();
+        const elapsed = task.elapsed + Math.floor((now - task.punchInTime) / 1000);
+        document.getElementById(`timer-${task.id}`).textContent = formatSecondsToHHMMSS(elapsed);
       }, 1000);
-      btn.dataset.interval = btn.timerInterval;
+      renderTasks();
     }
 
-    function punchOut(btn) {
-      const parent = btn.parentElement;
-      const punchInBtn = parent.querySelector("button[onclick^='punchIn']");
-      const inTime = parseInt(punchInBtn?.dataset?.time);
-      if (!inTime) return;
-      clearInterval(punchInBtn.timerInterval);
-      const duration = ((Date.now() - inTime) / 3600000).toFixed(2);
-      const durationEl = parent.querySelector(".duration");
-      durationEl.textContent = `Duration: ${duration} hrs`;
-      parent.querySelector(".timer").textContent = "00:00:00";
-      overallDuration += parseFloat(duration);
-      updateOverallTime();
+    function taskPunchOut(taskId) {
+      const task = taskLog.find(t => t.id === taskId);
+      if (!task || task.punchInTime === null) return;
+      const now = Date.now();
+      task.elapsed += Math.floor((now - task.punchInTime) / 1000);
+      task.punchInTime = null;
+      clearInterval(task.timerInterval);
+      task.timerInterval = null;
+      renderTasks();
     }
 
-    async function exportPDF() {
+    function removeTask(taskId) {
+      const taskIndex = taskLog.findIndex(t => t.id === taskId);
+      if (taskIndex !== -1) {
+        const task = taskLog[taskIndex];
+        if (task.timerInterval) clearInterval(task.timerInterval);
+        taskLog.splice(taskIndex, 1);
+        renderTasks();
+      }
+    }
+
+    function toggleExportBox() {
+      const box = document.getElementById("exportBox");
+      if (box.style.display === "block") {
+        box.style.display = "none";
+      } else {
+        box.style.display = "block";
+      }
+    }
+
+    function exportPDF() {
+      if (!currentName) {
+        alert("Please set your name before exporting.");
+        return;
+      }
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      const name = currentName || "Unnamed";
-      let y = 20;
-      doc.setFontSize(16);
-      doc.text(`Time Log Report`, 20, y);
+
+      doc.setFontSize(18);
+      doc.text("Time Tracker Report", 14, 22);
+      doc.setFontSize(14);
+      doc.text(`Name: ${currentName}`, 14, 32);
+
+      let y = 42;
+      let totalSeconds = overallElapsed + (overallPunchInTime ? Math.floor((Date.now() - overallPunchInTime)/1000) : 0);
+      if (taskLog.length === 0) {
+        doc.text("No tasks recorded.", 14, y);
+        y += 10;
+      } else {
+        doc.text("Tasks:", 14, y);
+        y += 10;
+        taskLog.forEach(task => {
+          const taskTotal = task.elapsed + (task.punchInTime ? Math.floor((Date.now() - task.punchInTime)/1000) : 0);
+          doc.text(`- ${task.name}: ${formatSecondsToHHMMSS(taskTotal)}`, 18, y);
+          y += 8;
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+        });
+      }
       y += 10;
-      doc.setFontSize(12);
-      doc.text(`User: ${name}`, 20, y);
-      y += 10;
-      let total = 0;
-      const entries = document.querySelectorAll(".task");
-      let taskCount = 0;
-      entries.forEach((el, index) => {
-        const durationText = el.querySelector(".duration").textContent;
-        if (!durationText.includes("Duration")) return;
-        const task = el.querySelector("strong").textContent;
-        const duration = durationText.replace("Duration: ", "").replace(" hrs", "");
-        doc.text(`${++taskCount}. ${task} - ${duration} hrs`, 20, y);
-        y += 8;
-        total += parseFloat(duration) || 0;
-      });
-      y += 10;
-      doc.text(`Total Tasks: ${taskCount}`, 20, y);
-      y += 8;
-      doc.text(`Overall Duration: ${total.toFixed(2)} hrs`, 20, y);
-      doc.save(`${name.replace(/\s+/g, '_')}_time_log.pdf`);
+      doc.text(`Overall Duration: ${formatSecondsToHHMMSS(totalSeconds)}`, 14, y);
+
+      doc.save(`TimeTracker_${currentName.replace(/\s+/g, "_")}_${Date.now()}.pdf`);
     }
 
     function exportCSV() {
-      const name = currentName || "Unnamed";
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += `User: ${name}\n`;
-      csvContent += "Task Number,Task Name,Duration (hrs)\n";
-      let total = 0;
-      const entries = document.querySelectorAll(".task");
-      let taskCount = 0;
-      entries.forEach((el) => {
-        const durationText = el.querySelector(".duration").textContent;
-        if (!durationText.includes("Duration")) return;
-        const task = el.querySelector("strong").textContent;
-        const duration = durationText.replace("Duration: ", "").replace(" hrs", "");
-        csvContent += `${++taskCount},${task},${duration}\n`;
-        total += parseFloat(duration) || 0;
-      });
-      csvContent += `\nTotal Tasks,${taskCount}\n`;
-      csvContent += `Overall Duration (hrs),${total.toFixed(2)}\n`;
-      const encodedUri = encodeURI(csvContent);
+      if (!currentName) {
+        alert("Please set your name before exporting.");
+        return;
+      }
+      let csvContent = `Name,${currentName}\n\n`;
+      if (taskLog.length === 0) {
+        csvContent += "No tasks recorded\n\n";
+      } else {
+        csvContent += "Task,Duration\n";
+        taskLog.forEach(task => {
+          const taskTotal = task.elapsed + (task.punchInTime ? Math.floor((Date.now() - task.punchInTime)/1000) : 0);
+          csvContent += `"${task.name}",${formatSecondsToHHMMSS(taskTotal)}\n`;
+        });
+      }
+      let totalSeconds = overallElapsed + (overallPunchInTime ? Math.floor((Date.now() - overallPunchInTime)/1000) : 0);
+      csvContent += `\nOverall Duration,${formatSecondsToHHMMSS(totalSeconds)}\n`;
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `${name.replace(/\s+/g, '_')}_time_log.csv`);
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `TimeTracker_${currentName.replace(/\s+/g, "_")}_${Date.now()}.csv`);
+      link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
+
+    // Initialize timer display
+    updateOverallTimerDisplay();
+
   </script>
 </body>
 </html>
