@@ -19,7 +19,6 @@
       text-align: center;
       overflow-x: hidden;
       width: 100%;
-      transition: background 0.4s ease, color 0.4s ease;
     }
     header {
       padding: 1em;
@@ -29,11 +28,6 @@
       font-size: 2em;
       font-weight: bold;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      animation: slideDown 1s ease-in-out;
-    }
-    @keyframes slideDown {
-      from { transform: translateY(-100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
     }
     main {
       padding: 2em;
@@ -97,17 +91,6 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 99;
       width: 200px;
-      animation: fadeIn 0.5s ease-in-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    .theme-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 100;
     }
     footer {
       margin-top: 2em;
@@ -117,39 +100,10 @@
       font-size: 1.1em;
       width: 100%;
     }
-    @media (max-width: 600px) {
-      header {
-        font-size: 1.5em;
-      }
-      button, input[type="text"] {
-        width: 90%;
-        font-size: 0.9em;
-      }
-      .three-dot, .theme-toggle {
-        font-size: 1.5em;
-      }
-      .input-box, .task {
-        max-width: 95%;
-      }
-    }
-    body.dark {
-      background-color: #222;
-      color: #eee;
-    }
-    body.dark .input-box, body.dark .task {
-      background-color: #333;
-      color: #eee;
-    }
-    body.dark footer {
-      background-color: #444;
-    }
   </style>
 </head>
 <body>
   <div class="three-dot" onclick="toggleExportBox()">&#8942;</div>
-  <div class="theme-toggle">
-    <button onclick="toggleTheme()">Toggle Theme</button>
-  </div>
   <div class="export-box" id="exportBox">
     <button onclick="exportPDF()">Export PDF</button>
     <button onclick="exportCSV()">Export CSV</button>
@@ -180,10 +134,6 @@
     function toggleExportBox() {
       const box = document.getElementById("exportBox");
       box.style.display = box.style.display === "block" ? "none" : "block";
-    }
-
-    function toggleTheme() {
-      document.body.classList.toggle("dark");
     }
 
     function saveName() {
