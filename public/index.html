@@ -7,103 +7,84 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-    html, body {
+    body {
+      font-family: 'Comfortaa', cursive;
       margin: 0;
       padding: 0;
-      font-family: 'Comfortaa', cursive;
-      background-color: #f2faff;
-      color: #222;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    header, footer {
+      background-color: #222;
+      color: white;
+      padding: 1em;
       text-align: center;
-      overflow-x: hidden;
-      width: 100%;
     }
-    header {
-      padding: 1em;
-      width: 100%;
-      background: linear-gradient(to right, #36d1dc, #5b86e5);
-      color: white;
-      font-size: 2em;
-      font-weight: bold;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
+
     main {
+      flex: 1;
       padding: 2em;
-      max-width: 100%;
     }
-    .input-box, .task {
-      margin: 1em auto;
-      padding: 1em;
-      border-radius: 20px;
-      background: #ffffff;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
-      max-width: 90%;
+
+    .input-box {
+      display: flex;
+      gap: 1em;
+      margin-bottom: 1em;
     }
-    button {
-      padding: 0.6em 1.8em;
-      border: none;
-      border-radius: 25px;
-      background: #00c9a7;
-      color: white;
-      margin: 0.5em;
-      font-size: 1em;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    button:hover {
-      background: #00b49f;
-      transform: scale(1.05);
-    }
-    input[type="text"] {
-      padding: 0.6em;
-      border: 2px solid #dcdcdc;
-      border-radius: 20px;
-      width: 70%;
-      font-family: 'Comfortaa', cursive;
-      font-size: 1em;
-    }
-    .task-list {
-      max-height: 300px;
-      overflow-y: auto;
-      padding-bottom: 1em;
-    }
-    .three-dot {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      font-size: 2em;
-      cursor: pointer;
-      background-color: rgba(0,0,0,0.05);
-      border-radius: 50%;
-      padding: 5px 10px;
-      z-index: 100;
-    }
-    .export-box {
-      display: none;
-      position: fixed;
-      top: 60px;
-      left: 20px;
+
+    .task-list .task {
       background: white;
-      border-radius: 10px;
+      border: 1px solid #ccc;
       padding: 1em;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 99;
-      width: 200px;
+      margin-bottom: 1em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      border-radius: 8px;
     }
-    footer {
-      margin-top: 2em;
-      padding: 1em;
-      background: #dfe6e9;
-      font-weight: bold;
-      font-size: 1.1em;
-      width: 100%;
+
+    .task div {
+      margin-right: 1em;
+    }
+
+    .task button {
+      padding: 0.5em 1em;
+      margin-left: 0.5em;
+    }
+
+    .timer, .duration {
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .export-box {
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 0.5em;
+      display: none;
+    }
+
+    .three-dot {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 1.5em;
     }
   </style>
 </head>
 <body>
   <div class="three-dot" onclick="toggleExportBox()">&#8942;</div>
+  <div class="theme-toggle">
+    <button onclick="toggleTheme()">Toggle Theme</button>
+  </div>
   <div class="export-box" id="exportBox">
     <button onclick="exportPDF()">Export PDF</button>
     <button onclick="exportCSV()">Export CSV</button>
@@ -122,18 +103,24 @@
       <button onclick="addTask()">Add Task</button>
     </div>
 
+    <div id="overallTimeDisplay" style="margin: 1em 0; font-weight: bold;">Overall Time: 0.00 hrs</div>
+
     <div class="task-list" id="taskContainer"></div>
   </main>
 
   <footer>Thank you Jesus Christ</footer>
 
   <script>
-    let taskLog = [];
     let currentName = "";
+    let overallDuration = 0;
 
     function toggleExportBox() {
       const box = document.getElementById("exportBox");
       box.style.display = box.style.display === "block" ? "none" : "block";
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
     }
 
     function saveName() {
@@ -141,8 +128,13 @@
       document.getElementById("displayName").textContent = `Hello, ${currentName}`;
     }
 
+    function updateOverallTime() {
+      document.getElementById("overallTimeDisplay").textContent = `Overall Time: ${overallDuration.toFixed(2)} hrs`;
+    }
+
     function addTask() {
-      const taskText = document.getElementById("taskInput").value.trim();
+      const taskInput = document.getElementById("taskInput");
+      const taskText = taskInput.value.trim();
       if (!taskText) return;
       const taskEl = document.createElement("div");
       taskEl.className = "task";
@@ -152,23 +144,42 @@
         <button onclick="punchOut(this)">Punch Out</button>
         <input type="checkbox" /> Completed
         <button onclick="this.parentElement.remove()">Close</button>
-        <div class="duration"></div>
+        <div class="duration">Duration: 0.00 hrs</div>
+        <div class="timer">00:00:00</div>
       `;
       document.getElementById("taskContainer").appendChild(taskEl);
-      document.getElementById("taskInput").value = "";
+      taskInput.value = "";
+      taskInput.focus();
     }
 
     function punchIn(btn) {
-      btn.dataset.time = Date.now();
+      const parent = btn.parentElement;
+      const timerEl = parent.querySelector(".timer");
+      const startTime = Date.now();
+      btn.dataset.time = startTime;
+      if (btn.timerInterval) clearInterval(btn.timerInterval);
+      btn.timerInterval = setInterval(() => {
+        const diff = Date.now() - startTime;
+        const hrs = String(Math.floor(diff / 3600000)).padStart(2, '0');
+        const mins = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+        const secs = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+        timerEl.textContent = `${hrs}:${mins}:${secs}`;
+      }, 1000);
+      btn.dataset.interval = btn.timerInterval;
     }
 
     function punchOut(btn) {
-      const inTime = parseInt(btn.previousElementSibling.dataset.time);
+      const parent = btn.parentElement;
+      const punchInBtn = parent.querySelector("button[onclick^='punchIn']");
+      const inTime = parseInt(punchInBtn?.dataset?.time);
       if (!inTime) return;
+      clearInterval(punchInBtn.timerInterval);
       const duration = ((Date.now() - inTime) / 3600000).toFixed(2);
-      const taskName = btn.parentElement.querySelector("strong").textContent;
-      btn.parentElement.querySelector(".duration").textContent = `Duration: ${duration} hrs`;
-      taskLog.push({ task: taskName, duration });
+      const durationEl = parent.querySelector(".duration");
+      durationEl.textContent = `Duration: ${duration} hrs`;
+      parent.querySelector(".timer").textContent = "00:00:00";
+      overallDuration += parseFloat(duration);
+      updateOverallTime();
     }
 
     async function exportPDF() {
@@ -183,13 +194,19 @@
       doc.text(`User: ${name}`, 20, y);
       y += 10;
       let total = 0;
-      taskLog.forEach((item, index) => {
-        doc.text(`${index + 1}. ${item.task} - ${item.duration} hrs`, 20, y);
+      const entries = document.querySelectorAll(".task");
+      let taskCount = 0;
+      entries.forEach((el, index) => {
+        const durationText = el.querySelector(".duration").textContent;
+        if (!durationText.includes("Duration")) return;
+        const task = el.querySelector("strong").textContent;
+        const duration = durationText.replace("Duration: ", "").replace(" hrs", "");
+        doc.text(`${++taskCount}. ${task} - ${duration} hrs`, 20, y);
         y += 8;
-        total += parseFloat(item.duration);
+        total += parseFloat(duration) || 0;
       });
       y += 10;
-      doc.text(`Total Tasks: ${taskLog.length}`, 20, y);
+      doc.text(`Total Tasks: ${taskCount}`, 20, y);
       y += 8;
       doc.text(`Overall Duration: ${total.toFixed(2)} hrs`, 20, y);
       doc.save(`${name.replace(/\s+/g, '_')}_time_log.pdf`);
@@ -201,11 +218,17 @@
       csvContent += `User: ${name}\n`;
       csvContent += "Task Number,Task Name,Duration (hrs)\n";
       let total = 0;
-      taskLog.forEach((item, index) => {
-        csvContent += `${index + 1},${item.task},${item.duration}\n`;
-        total += parseFloat(item.duration);
+      const entries = document.querySelectorAll(".task");
+      let taskCount = 0;
+      entries.forEach((el) => {
+        const durationText = el.querySelector(".duration").textContent;
+        if (!durationText.includes("Duration")) return;
+        const task = el.querySelector("strong").textContent;
+        const duration = durationText.replace("Duration: ", "").replace(" hrs", "");
+        csvContent += `${++taskCount},${task},${duration}\n`;
+        total += parseFloat(duration) || 0;
       });
-      csvContent += `\nTotal Tasks,${taskLog.length}\n`;
+      csvContent += `\nTotal Tasks,${taskCount}\n`;
       csvContent += `Overall Duration (hrs),${total.toFixed(2)}\n`;
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
