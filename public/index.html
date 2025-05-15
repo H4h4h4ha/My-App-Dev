@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>Funky Time Tracker</title>
+<title>Funky Time Tracker with Tasks</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap');
 
@@ -18,7 +18,7 @@
   body {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     text-align: center;
     min-height: 100vh;
@@ -27,19 +27,26 @@
   }
 
   h1 {
-    font-size: 4rem;
-    margin-bottom: 50px;
+    font-size: 3.5rem;
+    margin-bottom: 20px;
     color: #fff;
     text-shadow: 2px 2px 8px #9c27b0;
   }
 
-  .button-container {
-    display: flex;
-    gap: 30px;
-    flex-wrap: wrap;
-    justify-content: center;
+  /* Work punch area */
+  #work-punch {
+    background: rgba(255 255 255 / 0.85);
+    border-radius: 15px;
+    padding: 20px 30px;
+    margin-bottom: 40px;
+    max-width: 500px;
     width: 100%;
-    max-width: 600px;
+    box-shadow: 0 8px 20px rgba(156, 39, 176, 0.3);
+  }
+
+  #work-punch h2 {
+    margin-top: 0;
+    color: #9c27b0;
   }
 
   .btn {
@@ -47,16 +54,14 @@
     border: none;
     border-radius: 30px;
     color: white;
-    padding: 25px 60px;
-    font-size: 2rem;
-    margin: 10px;
+    padding: 15px 40px;
+    font-size: 1.5rem;
+    margin: 10px 15px 10px 0;
     cursor: pointer;
     box-shadow: 0 8px 15px rgba(156, 39, 176, 0.3);
     transition: all 0.3s ease;
     user-select: none;
-    flex: 1 1 200px;
-    max-width: 250px;
-    min-width: 180px;
+    min-width: 140px;
   }
 
   .btn:hover {
@@ -71,39 +76,307 @@
     transform: translateY(1px);
   }
 
-  /* Soft focus glow */
   .btn:focus {
     outline: none;
     box-shadow: 0 0 12px 4px #e1bee7;
   }
 
-  /* Responsive font scaling */
+  #work-hours {
+    font-size: 1.8rem;
+    margin-top: 10px;
+    color: #333;
+  }
+
+  /* Task input */
+  #task-input-section {
+    margin-bottom: 40px;
+    max-width: 600px;
+    width: 100%;
+  }
+
+  #task-input-section input[type="text"] {
+    width: 70%;
+    font-size: 1.3rem;
+    padding: 10px 15px;
+    border-radius: 30px;
+    border: 2px solid #9c27b0;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+
+  #task-input-section input[type="text"]:focus {
+    border-color: #7b1fa2;
+  }
+
+  #add-task-btn {
+    background: #9c27b0;
+    border: none;
+    border-radius: 30px;
+    color: white;
+    padding: 12px 30px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    margin-left: 15px;
+    box-shadow: 0 8px 15px rgba(156, 39, 176, 0.3);
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+
+  #add-task-btn:hover {
+    background: #7b1fa2;
+  }
+
+  #add-task-btn:active {
+    background: #6a1b9a;
+    transform: translateY(1px);
+  }
+
+  /* Task list */
+  #task-list {
+    max-width: 600px;
+    width: 100%;
+  }
+
+  .task-item {
+    background: rgba(255 255 255 / 0.85);
+    border-radius: 15px;
+    padding: 15px 25px;
+    margin-bottom: 15px;
+    box-shadow: 0 6px 18px rgba(156, 39, 176, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .task-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+  }
+
+  .task-info input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+  }
+
+  .task-name {
+    font-size: 1.5rem;
+    color: #6a1b9a;
+    flex: 1;
+    text-align: left;
+    user-select: none;
+  }
+
+  .task-buttons {
+    display: flex;
+    gap: 10px;
+  }
+
+  .task-buttons button {
+    min-width: 90px;
+    padding: 8px 12px;
+    font-size: 1.1rem;
+  }
+
+  .task-hours {
+    margin-left: 15px;
+    font-weight: 700;
+    color: #9c27b0;
+    min-width: 80px;
+    text-align: right;
+    user-select: none;
+  }
+
+  /* Responsive */
   @media (max-width: 480px) {
     h1 {
-      font-size: 3rem;
-      margin-bottom: 40px;
+      font-size: 2.8rem;
+    }
+
+    #work-punch, #task-list, #task-input-section {
+      max-width: 100%;
+      padding: 10px 15px;
     }
 
     .btn {
-      font-size: 1.8rem;
-      padding: 20px 40px;
-      max-width: 100%;
-      flex: 1 1 100%;
+      font-size: 1.3rem;
+      padding: 12px 30px;
+      min-width: 120px;
+      margin: 8px 8px 8px 0;
     }
 
-    .button-container {
-      gap: 20px;
+    .task-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .task-buttons {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .task-hours {
+      text-align: left;
+      margin-left: 0;
     }
   }
 </style>
 </head>
 <body>
+
   <h1>Funky Time Tracker</h1>
-  <div class="button-container">
-    <button class="btn" onclick="alert('Punched In!')">Punch In</button>
-    <button class="btn" onclick="alert('Punched Out!')">Punch Out</button>
-    <button class="btn" onclick="alert('Lunch In!')">Lunch In</button>
-    <button class="btn" onclick="alert('Lunch Out!')">Lunch Out</button>
-  </div>
+
+  <!-- Work Punch Section -->
+  <section id="work-punch">
+    <h2>Work Time</h2>
+    <button class="btn" id="work-punch-in">Punch In</button>
+    <button class="btn" id="work-punch-out" disabled>Punch Out</button>
+    <div id="work-hours">Hours worked: 0.00</div>
+  </section>
+
+  <!-- Task input -->
+  <section id="task-input-section">
+    <input type="text" id="new-task-name" placeholder="Add a new task" />
+    <button id="add-task-btn">Add Task</button>
+  </section>
+
+  <!-- Task list -->
+  <section id="task-list"></section>
+
+<script>
+  // ----------- Work Time Punch Logic ------------
+
+  let workPunchInTime = null;
+  let totalWorkHours = 0;
+
+  const workPunchInBtn = document.getElementById('work-punch-in');
+  const workPunchOutBtn = document.getElementById('work-punch-out');
+  const workHoursDisplay = document.getElementById('work-hours');
+
+  workPunchInBtn.addEventListener('click', () => {
+    workPunchInTime = new Date();
+    workPunchInBtn.disabled = true;
+    workPunchOutBtn.disabled = false;
+  });
+
+  workPunchOutBtn.addEventListener('click', () => {
+    if (!workPunchInTime) return;
+    const now = new Date();
+    const diffMs = now - workPunchInTime;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    totalWorkHours += diffHours;
+    workHoursDisplay.textContent = `Hours worked: ${totalWorkHours.toFixed(2)}`;
+    workPunchInTime = null;
+    workPunchInBtn.disabled = false;
+    workPunchOutBtn.disabled = true;
+  });
+
+  // ----------- Task List Logic ------------
+
+  const taskListEl = document.getElementById('task-list');
+  const addTaskBtn = document.getElementById('add-task-btn');
+  const newTaskInput = document.getElementById('new-task-name');
+
+  // Store tasks in this array
+  // Each task = { id, name, punchIn: Date|null, totalHours: number, completed: boolean }
+  let tasks = [];
+
+  // Render tasks list
+  function renderTasks() {
+    taskListEl.innerHTML = '';
+    tasks.forEach(task => {
+      const taskEl = document.createElement('div');
+      taskEl.className = 'task-item';
+
+      const infoEl = document.createElement('div');
+      infoEl.className = 'task-info';
+
+      // Checkbox
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = task.completed;
+      checkbox.addEventListener('change', () => {
+        task.completed = checkbox.checked;
+      });
+
+      // Task name
+      const nameEl = document.createElement('div');
+      nameEl.className = 'task-name';
+      nameEl.textContent = task.name;
+
+      infoEl.appendChild(checkbox);
+      infoEl.appendChild(nameEl);
+
+      // Buttons container
+      const btnsEl = document.createElement('div');
+      btnsEl.className = 'task-buttons';
+
+      // Punch In button
+      const punchInBtn = document.createElement('button');
+      punchInBtn.textContent = 'Punch In';
+      punchInBtn.disabled = task.punchIn !== null;
+      punchInBtn.addEventListener('click', () => {
+        if (task.punchIn === null) {
+          task.punchIn = new Date();
+          punchInBtn.disabled = true;
+          punchOutBtn.disabled = false;
+        }
+      });
+
+      // Punch Out button
+      const punchOutBtn = document.createElement('button');
+      punchOutBtn.textContent = 'Punch Out';
+      punchOutBtn.disabled = task.punchIn === null;
+      punchOutBtn.addEventListener('click', () => {
+        if (task.punchIn !== null) {
+          const now = new Date();
+          const diffMs = now - task.punchIn;
+          const diffHours = diffMs / (1000 * 60 * 60);
+          task.totalHours += diffHours;
+          task.punchIn = null;
+          punchInBtn.disabled = false;
+          punchOutBtn.disabled = true;
+          renderTasks(); // re-render to update hours
+        }
+      });
+
+      btnsEl.appendChild(punchInBtn);
+      btnsEl.appendChild(punchOutBtn);
+
+      // Hours display
+      const hoursEl = document.createElement('div');
+      hoursEl.className = 'task-hours';
+      hoursEl.textContent = `${task.totalHours.toFixed(2)} hrs`;
+
+      taskEl.appendChild(infoEl);
+      taskEl.appendChild(btnsEl);
+      taskEl.appendChild(hoursEl);
+
+      taskListEl.appendChild(taskEl);
+    });
+  }
+
+  // Add new task
+  addTaskBtn.addEventListener('click', () => {
+    const taskName = newTaskInput.value.trim();
+    if (!taskName) return alert('Please enter a task name');
+    tasks.push({
+      id: Date.now(),
+      name: taskName,
+      punchIn: null,
+      totalHours: 0,
+      completed: false,
+    });
+    newTaskInput.value = '';
+    renderTasks();
+  });
+
+  // Initial render
+  renderTasks();
+</script>
+
 </body>
 </html>
