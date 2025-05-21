@@ -2,136 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Daily Focus Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Timer App</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
-      margin: 0;
-      padding: 0;
-      color: #333;
+      font-family: Arial, sans-serif;
+      padding: 20px;
     }
-    header {
-      background: #6a11cb;
-      background: linear-gradient(to right, #2575fc, #6a11cb);
-      color: white;
-      text-align: center;
-      padding: 2em;
-      font-size: 1.5em;
+    .task {
+      margin-bottom: 10px;
     }
-    main {
-      padding: 2em;
-      max-width: 600px;
-      margin: auto;
-    }
-    section {
-      margin-bottom: 2em;
-      background: white;
-      padding: 1.5em;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
-    h2 {
-      margin-top: 0;
-      color: #444;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 0.8em;
-      margin-top: 0.5em;
-      border: 1.5px solid #ccc;
-      border-radius: 10px;
-      font-size: 1em;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      margin: 0.5em 0;
-      padding: 0.5em;
-      background: #f9f9f9;
-      border-radius: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .task input {
+      margin: 0 5px;
     }
     button {
-      padding: 0.4em 0.8em;
-      border: none;
-      border-radius: 8px;
-      background: #2575fc;
-      color: white;
-      cursor: pointer;
-    }
-    .mood-btn {
-      font-size: 1.5em;
-      margin: 0.5em;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-    .mood-btn:hover {
-      transform: scale(1.2);
-    }
-    footer {
-      text-align: center;
-      padding: 1em;
-      font-size: 0.9em;
-      color: #666;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-
-  <header>
-    Daily Focus Dashboard <br>
-    <small>"Small steps every day"</small>
-  </header>
-
-  <main>
-    <section>
-      <h2>🎯 Today's Focus</h2>
-      <input type="text" placeholder="What’s your main goal today?" id="focusInput">
-    </section>
-
-    <section>
-      <h2>✅ To-Do List</h2>
-      <input type="text" id="todoInput" placeholder="Add a task..." />
-      <button onclick="addTodo()">Add</button>
-      <ul id="todoList"></ul>
-    </section>
-
-    <section>
-      <h2>🙂 How do you feel today?</h2>
-      <div>
-        <span class="mood-btn" onclick="setMood('😀')">😀</span>
-        <span class="mood-btn" onclick="setMood('😐')">😐</span>
-        <span class="mood-btn" onclick="setMood('😔')">😔</span>
-        <span class="mood-btn" onclick="setMood('😡')">😡</span>
-      </div>
-      <p id="moodDisplay"></p>
-    </section>
-  </main>
-
-  <footer>🌼 Stay focused, stay blessed.</footer>
+  <h1>Task Timer App</h1>
+  <div id="taskContainer"></div>
+  <button onclick="addTask()">Add Task</button>
+  <button onclick="exportToExcel()">Export to Excel</button>
+  <button onclick="exportToPDF()">Export to PDF</button>
 
   <script>
-    function addTodo() {
-      const input = document.getElementById("todoInput");
-      const list = document.getElementById("todoList");
-      const task = input.value.trim();
-      if (!task) return;
-      const li = document.createElement("li");
-      li.innerHTML = task + ' <button onclick="this.parentElement.remove()">Remove</button>';
-      list.appendChild(li);
-      input.value = "";
+    let taskId = 0;
+
+    function addTask() {
+      const container = document.getElementById("taskContainer");
+      const div = document.createElement("div");
+      div.className = "task";
+      div.id = `task-${taskId}`;
+      div.innerHTML = `
+        <input type="text" placeholder="Task Name" id="name-${taskId}" />
+        <input type="text" placeholder="Start Time" id="start-${taskId}" readonly />
+        <input type="text" placeholder="Stop Time" id="stop-${taskId}" readonly />
+        <button onclick="startTimer(${taskId})">Start</button>
+        <button onclick="stopTimer(${taskId})">Stop</button>
+      `;
+      container.appendChild(div);
+      taskId++;
     }
 
-    function setMood(emoji) {
-      document.getElementById("moodDisplay").textContent = "You feel: " + emoji;
+    function getCurrentTime() {
+      const now = new Date();
+      return now.toLocaleTimeString();
+    }
+
+    function startTimer(id) {
+      document.getElementById(`start-${id}`).value = getCurrentTime();
+    }
+
+    function stopTimer(id) {
+      document.getElementById(`stop-${id}`).value = getCurrentTime();
+    }
+
+    function exportToExcel() {
+      const tasks = [];
+      for (let i = 0; i < taskId; i++) {
+        const name = document.getElementById(`name-${i}`)?.value;
+        const start = document.getElementById(`start-${i}`)?.value;
+        const stop = document.getElementById(`stop-${i}`)?.value;
+        if (name) {
+          tasks.push({ Task: name, Start: start, Stop: stop });
+        }
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(tasks);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
+      XLSX.writeFile(workbook, "tasks.xlsx");
+    }
+
+    async function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("Task Report", 10, 10);
+
+      let y = 20;
+      for (let i = 0; i < taskId; i++) {
+        const name = document.getElementById(`name-${i}`)?.value;
+        const start = document.getElementById(`start-${i}`)?.value;
+        const stop = document.getElementById(`stop-${i}`)?.value;
+        if (name) {
+          doc.text(`Task: ${name} | Start: ${start} | Stop: ${stop}`, 10, y);
+          y += 10;
+        }
+      }
+
+      doc.save("tasks.pdf");
     }
   </script>
-
 </body>
 </html>
