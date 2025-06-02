@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Smart Task Tracker</title>
+  <title>Smart Task Timer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     * { box-sizing: border-box; }
@@ -100,6 +100,28 @@
       .task { flex-direction: column; align-items: flex-start; }
       .controls { margin-top: 0.5rem; }
     }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 1rem;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .modal-content button {
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -123,10 +145,19 @@
     <div id="taskContainer"></div>
   </div>
 
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <p id="modalMsg"></p>
+      <button onclick="closeModal()">OK</button>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const usernameKey = "taskAppUsername";
     const tasksKey = "taskAppTasks";
+    const modal = document.getElementById("modal");
+    const modalMsg = document.getElementById("modalMsg");
 
     let username = localStorage.getItem(usernameKey);
     if (!username) {
@@ -147,9 +178,18 @@
       return `${h}h ${m}m ${sec}s`;
     }
 
+    function showModal(message) {
+      modalMsg.textContent = message;
+      modal.style.display = "block";
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
     function addTask() {
       const name = document.getElementById("taskName").value.trim();
-      if (!name) return alert("Task name is required");
+      if (!name) return showModal("Task name is required.");
       const today = new Date().toISOString().split("T")[0];
       const task = { id: Date.now(), name, seconds: 0, todaySeconds: 0, lastDate: today, running: false };
       tasks.push(task);
@@ -160,6 +200,15 @@
 
     function toggleTimer(id) {
       const task = tasks.find(t => t.id === id);
+
+      if (!task.running) {
+        const runningTask = tasks.find(t => t.running && t.id !== id);
+        if (runningTask) {
+          showModal(`Task \"${runningTask.name}\" is already running. Please stop it first.`);
+          return;
+        }
+      }
+
       task.running = !task.running;
       saveTasks();
       renderTasks();
@@ -184,7 +233,6 @@
       const today = new Date().toISOString().split("T")[0];
 
       tasks.forEach(task => {
-        // Reset today's time if date has changed
         if (task.lastDate !== today) {
           task.todaySeconds = 0;
           task.lastDate = today;
