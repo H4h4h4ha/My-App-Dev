@@ -1,49 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Task Timer Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Smart Task Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    * { box-sizing: border-box; }
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #333;
       margin: 0;
       padding: 1rem;
-      background: #f7f7f7;
+    }
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-    .task-input {
-      margin-top: 1rem;
-      display: flex;
-      gap: 0.5rem;
-    }
-    .task-input input {
-      flex: 1;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
-    .task-input button {
-      padding: 0.5rem 1rem;
-    }
-    .task {
-      background: #fff;
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .task-info {
-      flex: 1;
-    }
-    .controls button {
-      margin: 0 0.5rem;
     }
     .dropdown {
       position: relative;
@@ -52,60 +33,125 @@
       display: none;
       position: absolute;
       right: 0;
-      background-color: #fff;
-      box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
-      padding: 0.5rem;
+      background: #fff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border-radius: 6px;
       z-index: 1;
     }
     .dropdown:hover .dropdown-content {
       display: block;
     }
+    .dropdown-content button {
+      width: 100%;
+      padding: 0.5rem;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+    }
+    .input-area {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .task {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-left: 4px solid #4f46e5;
+      border-radius: 8px;
+      background: #f9fafb;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .task input {
+      border: none;
+      background: transparent;
+      font-weight: bold;
+      font-size: 1rem;
+      width: 100%;
+    }
+    .task input:focus {
+      outline: none;
+      border-bottom: 1px solid #ccc;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .start { background: #22c55e; color: white; }
+    .stop { background: #ef4444; color: white; }
+    .delete { background: #ccc; }
+    .time-label { color: #555; font-size: 0.9rem; }
     @media (max-width: 600px) {
-      .task {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+      .task { flex-direction: column; align-items: flex-start; }
+      .controls { margin-top: 0.5rem; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h2>Task Tracker</h2>
-    <div class="dropdown">
-      <button>⋮</button>
-      <div class="dropdown-content">
-        <button onclick="exportCSV()">Export CSV</button><br>
-        <button onclick="exportPDF()">Export PDF</button>
+  <div class="container">
+    <div class="header">
+      <div id="usernameDisplay">Welcome, User</div>
+      <div class="dropdown">
+        <button>⋮</button>
+        <div class="dropdown-content">
+          <button onclick="exportCSV()">Export CSV</button>
+          <button onclick="exportPDF()">Export PDF</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="task-input">
-    <input type="text" id="taskName" placeholder="Enter task name">
-    <button onclick="addTask()">Add Task</button>
-  </div>
+    <div class="input-area">
+      <input type="text" id="taskName" placeholder="Enter task name" />
+      <button onclick="addTask()">Add Task</button>
+    </div>
 
-  <div id="taskContainer"></div>
+    <div id="taskContainer"></div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+    const usernameKey = "taskAppUsername";
+    const tasksKey = "taskAppTasks";
+
+    let username = localStorage.getItem(usernameKey);
+    if (!username) {
+      username = prompt("Enter your name:");
+      if (!username) username = "User";
+      localStorage.setItem(usernameKey, username);
+    }
+    document.getElementById("usernameDisplay").innerText = `Welcome, ${username}`;
+
+    let tasks = JSON.parse(localStorage.getItem(tasksKey) || "[]");
 
     function saveTasks() {
-      localStorage.setItem("tasks", JSON.stringify(tasks));
+      localStorage.setItem(tasksKey, JSON.stringify(tasks));
     }
 
-    function formatTime(seconds) {
-      const h = Math.floor(seconds / 3600);
-      const m = Math.floor((seconds % 3600) / 60);
-      const s = seconds % 60;
-      return `${h}h ${m}m ${s}s`;
+    function formatTime(s) {
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return `${h}h ${m}m ${sec}s`;
     }
 
     function addTask() {
       const name = document.getElementById("taskName").value.trim();
-      if (!name) return alert("Task name required.");
-      const task = { name, seconds: 0, running: false, id: Date.now() };
+      if (!name) return alert("Task name is required");
+      const today = new Date().toISOString().split("T")[0];
+      const task = { id: Date.now(), name, seconds: 0, todaySeconds: 0, lastDate: today, running: false };
       tasks.push(task);
       saveTasks();
       renderTasks();
@@ -119,64 +165,105 @@
       renderTasks();
     }
 
+    function editName(id, value) {
+      const task = tasks.find(t => t.id === id);
+      task.name = value.trim();
+      saveTasks();
+    }
+
+    function deleteTask(id) {
+      if (!confirm("Delete this task?")) return;
+      tasks = tasks.filter(t => t.id !== id);
+      saveTasks();
+      renderTasks();
+    }
+
     function renderTasks() {
       const container = document.getElementById("taskContainer");
       container.innerHTML = "";
+      const today = new Date().toISOString().split("T")[0];
+
       tasks.forEach(task => {
+        // Reset today's time if date has changed
+        if (task.lastDate !== today) {
+          task.todaySeconds = 0;
+          task.lastDate = today;
+        }
+
         const div = document.createElement("div");
         div.className = "task";
 
-        const info = document.createElement("div");
-        info.className = "task-info";
-        info.innerHTML = `<strong>${task.name}</strong><br>Time: <span id="time-${task.id}">${formatTime(task.seconds)}</span>`;
+        const left = document.createElement("div");
+        const nameInput = document.createElement("input");
+        nameInput.value = task.name;
+        nameInput.onchange = e => editName(task.id, e.target.value);
+        left.appendChild(nameInput);
+        left.innerHTML += `
+          <div class="time-label">Today: ${formatTime(task.todaySeconds)}</div>
+          <div class="time-label">Total: ${formatTime(task.seconds)}</div>
+        `;
 
         const controls = document.createElement("div");
         controls.className = "controls";
-        const btn = document.createElement("button");
-        btn.innerText = task.running ? "Stop" : "Start";
-        btn.onclick = () => toggleTimer(task.id);
-        controls.appendChild(btn);
+        const toggleBtn = document.createElement("button");
+        toggleBtn.innerText = task.running ? "Stop" : "Start";
+        toggleBtn.className = task.running ? "stop" : "start";
+        toggleBtn.onclick = () => toggleTimer(task.id);
 
-        div.appendChild(info);
+        const deleteBtn = document.createElement("button");
+        deleteBtn.innerText = "Delete";
+        deleteBtn.className = "delete";
+        deleteBtn.onclick = () => deleteTask(task.id);
+
+        controls.appendChild(toggleBtn);
+        controls.appendChild(deleteBtn);
+
+        div.appendChild(left);
         div.appendChild(controls);
         container.appendChild(div);
       });
     }
 
     setInterval(() => {
+      const today = new Date().toISOString().split("T")[0];
       tasks.forEach(task => {
         if (task.running) {
-          task.seconds += 1;
-          const span = document.getElementById(`time-${task.id}`);
-          if (span) span.innerText = formatTime(task.seconds);
+          task.seconds++;
+          if (task.lastDate !== today) {
+            task.todaySeconds = 1;
+            task.lastDate = today;
+          } else {
+            task.todaySeconds++;
+          }
         }
       });
       saveTasks();
+      renderTasks();
     }, 1000);
 
     function exportCSV() {
-      let csv = "Task Name,Duration (seconds)\n";
+      let csv = "Task Name,Total Time (sec),Today Time (sec)\n";
       tasks.forEach(t => {
-        csv += `"${t.name}",${t.seconds}\n`;
+        csv += `"${t.name}",${t.seconds},${t.todaySeconds}\n`;
       });
       const blob = new Blob([csv], { type: "text/csv" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "tasks.csv";
+      link.download = `${username}_tasks.csv`;
       link.click();
     }
 
     async function exportPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      doc.setFontSize(12);
-      doc.text("Task Time Report", 10, 10);
+      doc.text(`Task Report for ${username}`, 10, 10);
       let y = 20;
       tasks.forEach((t, i) => {
-        doc.text(`${i + 1}. ${t.name} - ${formatTime(t.seconds)}`, 10, y);
-        y += 10;
+        doc.text(`${i + 1}. ${t.name}`, 10, y);
+        doc.text(`Total: ${formatTime(t.seconds)} | Today: ${formatTime(t.todaySeconds)}`, 10, y + 8);
+        y += 18;
       });
-      doc.save("tasks.pdf");
+      doc.save(`${username}_tasks.pdf`);
     }
 
     renderTasks();
