@@ -1,320 +1,731 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <title>Smart Task Timer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Task Timer App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    * { box-sizing: border-box; }
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+    }
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
-      color: #333;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 1rem;
+      background: var(--bg);
+      color: var(--fg);
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    :root {
+      --bg: #f0f2f5;
+      --fg: #333;
+      --primary: #4f46e5;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --card-bg: #fff;
+      --input-bg: #fff;
+      --input-border: #ccc;
+    }
+    [data-theme='dark'] {
+      --bg: #181a1b;
+      --fg: #e0e0e0;
+      --primary: #8b5cf6;
+      --accent: #22c55e;
+      --danger: #f87171;
+      --card-bg: #222425;
+      --input-bg: #2a2d30;
+      --input-border: #555;
     }
     .container {
       max-width: 850px;
-      margin: auto;
-      background: #fff;
+      width: 100%;
+      background: var(--card-bg);
       padding: 1.5rem;
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 3rem;
     }
-    .header {
+    header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
-    .dropdown {
-      position: relative;
+    #usernameDisplay {
+      font-weight: 600;
+      font-size: 1.2rem;
     }
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      right: 0;
-      background: #fff;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      border-radius: 6px;
-      z-index: 1;
-    }
-    .dropdown:hover .dropdown-content {
-      display: block;
-    }
-    .dropdown-content button {
-      width: 100%;
-      padding: 0.5rem;
-      border: none;
-      background: none;
-      text-align: left;
+    #themeToggle {
       cursor: pointer;
+      background: none;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-weight: 600;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    #themeToggle:hover {
+      background-color: var(--primary);
+      color: white;
     }
     .input-area {
       display: flex;
       gap: 0.5rem;
-      margin-top: 1rem;
+      flex-wrap: wrap;
     }
-    input[type="text"] {
+    input[type="text"], input[type="date"] {
       flex: 1;
       padding: 0.6rem;
       border-radius: 6px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--fg);
+      font-size: 1rem;
+    }
+    input[type="text"]:focus, input[type="date"]:focus {
+      outline: none;
+      border-color: var(--primary);
     }
     button {
       padding: 0.6rem 1rem;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s;
+      user-select: none;
     }
-    .task {
-      margin-top: 1rem;
-      padding: 1rem;
-      border-left: 4px solid #4f46e5;
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background-color: #4338ca;
+    }
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background-color: #b91c1c;
+    }
+    .btn-secondary {
+      background-color: var(--accent);
+      color: white;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #16a34a;
+    }
+    .tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .task-card {
+      background: var(--card-bg);
+      border-left: 5px solid var(--primary);
       border-radius: 8px;
-      background: #f9fafb;
+      padding: 1rem;
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
-      flex-wrap: wrap;
+      gap: 1rem;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.05);
     }
-    .task input {
-      border: none;
-      background: transparent;
-      font-weight: bold;
-      font-size: 1rem;
-      width: 100%;
-    }
-    .task input:focus {
-      outline: none;
-      border-bottom: 1px solid #ccc;
-    }
-    .controls {
+    .task-info {
+      flex: 1 1 250px;
+      min-width: 200px;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .task-controls {
+      display: flex;
+      align-items: center;
       gap: 0.5rem;
+      flex-wrap: wrap;
     }
-    .start { background: #22c55e; color: white; }
-    .stop { background: #ef4444; color: white; }
-    .delete { background: #ccc; }
-    .time-label { color: #555; font-size: 0.9rem; }
-    @media (max-width: 600px) {
-      .task { flex-direction: column; align-items: flex-start; }
-      .controls { margin-top: 0.5rem; }
+    .task-controls button {
+      min-width: 70px;
     }
+    .time-labels {
+      color: var(--fg);
+      opacity: 0.7;
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+    }
+    input.editable {
+      border: 1px solid var(--input-border);
+      border-radius: 4px;
+      padding: 0.3rem 0.5rem;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--fg);
+      background: var(--input-bg);
+      transition: border-color 0.3s;
+    }
+    input.editable:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    label {
+      font-size: 0.9rem;
+      margin-right: 0.3rem;
+    }
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .export-menu {
+      position: relative;
+      user-select: none;
+    }
+    .export-menu > button {
+      font-size: 1.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--fg);
+      padding: 0 0.3rem;
+      user-select: none;
+      transition: color 0.3s;
+    }
+    .export-menu:hover > button {
+      color: var(--primary);
+    }
+    .export-dropdown {
+      display: none;
+      position: absolute;
+      top: 120%;
+      left: 0;
+      background: var(--card-bg);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      z-index: 100;
+      min-width: 130px;
+    }
+    .export-dropdown button {
+      display: block;
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--fg);
+      text-align: left;
+      transition: background-color 0.2s;
+    }
+    .export-dropdown button:hover {
+      background-color: var(--primary);
+      color: white;
+    }
+    .export-menu:hover .export-dropdown {
+      display: block;
+    }
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
-      z-index: 10;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal.active {
+      display: flex;
     }
     .modal-content {
-      background-color: #fff;
-      margin: 15% auto;
-      padding: 1rem;
-      border-radius: 10px;
-      width: 80%;
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
       max-width: 400px;
+      width: 90%;
       text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      color: var(--fg);
     }
-    .modal-content button {
-      margin-top: 1rem;
+    .modal-content p {
+      margin: 0 0 1rem 0;
+      font-size: 1.1rem;
+    }
+    /* Responsive */
+    @media (max-width: 600px) {
+      .task-card {
+        flex-direction: column;
+      }
+      .task-controls {
+        justify-content: flex-start;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
     }
   </style>
 </head>
-<body>
+<body data-theme="light">
   <div class="container">
-    <div class="header">
+    <header>
       <div id="usernameDisplay">Welcome, User</div>
-      <div class="dropdown">
-        <button>⋮</button>
-        <div class="dropdown-content">
-          <button onclick="exportCSV()">Export CSV</button>
-          <button onclick="exportPDF()">Export PDF</button>
+      <button id="themeToggle" aria-label="Toggle dark/light mode">Dark Mode</button>
+      <div class="export-menu" aria-label="Export menu">
+        <button title="Export options">⋮</button>
+        <div class="export-dropdown" role="menu">
+          <button id="exportCSV" role="menuitem">Export CSV</button>
+          <button id="exportPDF" role="menuitem">Export PDF</button>
         </div>
       </div>
-    </div>
+    </header>
 
     <div class="input-area">
-      <input type="text" id="taskName" placeholder="Enter task name" />
-      <button onclick="addTask()">Add Task</button>
+      <input type="text" id="taskName" placeholder="Enter task name" aria-label="Task name" />
+      <input type="text" id="taskTags" placeholder="Tags (comma separated)" aria-label="Task tags" />
+      <input type="date" id="taskDueDate" aria-label="Task due date" />
+      <button id="addTaskBtn" class="btn-primary" aria-label="Add task">Add Task</button>
     </div>
 
-    <div id="taskContainer"></div>
+    <main class="tasks" id="taskContainer" aria-live="polite" aria-relevant="additions removals"></main>
   </div>
 
-  <div class="modal" id="modal">
+  <!-- Modal -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalMsg">
     <div class="modal-content">
       <p id="modalMsg"></p>
-      <button onclick="closeModal()">OK</button>
+      <button id="modalCloseBtn" class="btn-primary">OK</button>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    const usernameKey = "taskAppUsername";
-    const tasksKey = "taskAppTasks";
-    const modal = document.getElementById("modal");
-    const modalMsg = document.getElementById("modalMsg");
+    (() => {
+      // State
+      let tasks = [];
+      let currentRunningTaskId = null;
+      let timerInterval = null;
+      let username = localStorage.getItem('username') || 'User';
+      let theme = localStorage.getItem('theme') || 'light';
 
-    let username = localStorage.getItem(usernameKey);
-    if (!username) {
-      username = prompt("Enter your name:");
-      if (!username) username = "User";
-      localStorage.setItem(usernameKey, username);
-    }
-    document.getElementById("usernameDisplay").innerText = `Welcome, ${username}`;
+      // Elements
+      const usernameDisplay = document.getElementById('usernameDisplay');
+      const themeToggleBtn = document.getElementById('themeToggle');
+      const taskNameInput = document.getElementById('taskName');
+      const taskTagsInput = document.getElementById('taskTags');
+      const taskDueDateInput = document.getElementById('taskDueDate');
+      const addTaskBtn = document.getElementById('addTaskBtn');
+      const taskContainer = document.getElementById('taskContainer');
+      const modal = document.getElementById('modal');
+      const modalMsg = document.getElementById('modalMsg');
+      const modalCloseBtn = document.getElementById('modalCloseBtn');
+      const exportCSVBtn = document.getElementById('exportCSV');
+      const exportPDFBtn = document.getElementById('exportPDF');
 
-    let tasks = JSON.parse(localStorage.getItem(tasksKey) || "[]");
+      // Initialize
+      function init() {
+        setTheme(theme);
+        usernameDisplay.textContent = `Welcome, ${username}`;
+        loadTasks();
+        renderTasks();
+        setupEventListeners();
+      }
 
-    function saveTasks() {
-      localStorage.setItem(tasksKey, JSON.stringify(tasks));
-    }
+      function setupEventListeners() {
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        addTaskBtn.addEventListener('click', onAddTask);
+        modalCloseBtn.addEventListener('click', closeModal);
+        exportCSVBtn.addEventListener('click', exportCSV);
+        exportPDFBtn.addEventListener('click', exportPDF);
+        taskContainer.addEventListener('click', onTaskButtonClick);
+        taskContainer.addEventListener('input', onTaskEdit);
+        taskContainer.addEventListener('change', onTaskEdit);
+        taskContainer.addEventListener('keydown', onTaskEditKeydown);
+        usernameDisplay.addEventListener('click', promptUsername);
+      }
 
-    function formatTime(s) {
-      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-      return `${h}h ${m}m ${sec}s`;
-    }
-
-    function showModal(message) {
-      modalMsg.textContent = message;
-      modal.style.display = "block";
-    }
-
-    function closeModal() {
-      modal.style.display = "none";
-    }
-
-    function addTask() {
-      const name = document.getElementById("taskName").value.trim();
-      if (!name) return showModal("Task name is required.");
-      const today = new Date().toISOString().split("T")[0];
-      const task = { id: Date.now(), name, seconds: 0, todaySeconds: 0, lastDate: today, running: false };
-      tasks.push(task);
-      saveTasks();
-      renderTasks();
-      document.getElementById("taskName").value = "";
-    }
-
-    function toggleTimer(id) {
-      const task = tasks.find(t => t.id === id);
-
-      if (!task.running) {
-        const runningTask = tasks.find(t => t.running && t.id !== id);
-        if (runningTask) {
-          showModal(`Task \"${runningTask.name}\" is already running. Please stop it first.`);
-          return;
+      // Username edit on click
+      function promptUsername() {
+        const newName = prompt('Enter your name:', username);
+        if (newName && newName.trim()) {
+          username = newName.trim();
+          localStorage.setItem('username', username);
+          usernameDisplay.textContent = `Welcome, ${username}`;
         }
       }
 
-      task.running = !task.running;
-      saveTasks();
-      renderTasks();
-    }
+      // Theme toggle
+      function toggleTheme() {
+        theme = theme === 'light' ? 'dark' : 'light';
+        setTheme(theme);
+        localStorage.setItem('theme', theme);
+      }
+      function setTheme(t) {
+        document.body.setAttribute('data-theme', t);
+        themeToggleBtn.textContent = t === 'light' ? 'Dark Mode' : 'Light Mode';
+      }
 
-    function editName(id, value) {
-      const task = tasks.find(t => t.id === id);
-      task.name = value.trim();
-      saveTasks();
-    }
+      // Modal
+      function showModal(message) {
+        modalMsg.textContent = message;
+        modal.classList.add('active');
+      }
+      function closeModal() {
+        modal.classList.remove('active');
+      }
 
-    function deleteTask(id) {
-      if (!confirm("Delete this task?")) return;
-      tasks = tasks.filter(t => t.id !== id);
-      saveTasks();
-      renderTasks();
-    }
-
-    function renderTasks() {
-      const container = document.getElementById("taskContainer");
-      container.innerHTML = "";
-      const today = new Date().toISOString().split("T")[0];
-
-      tasks.forEach(task => {
-        if (task.lastDate !== today) {
-          task.todaySeconds = 0;
-          task.lastDate = today;
+      // Task logic
+      function onAddTask() {
+        const name = taskNameInput.value.trim();
+        if (!name) {
+          showModal('Task name cannot be empty!');
+          return;
         }
+        const tagsRaw = taskTagsInput.value.trim();
+        const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
+        const dueDate = taskDueDateInput.value || null;
 
-        const div = document.createElement("div");
-        div.className = "task";
+        const newTask = {
+          id: Date.now().toString(),
+          name,
+          tags,
+          dueDate,
+          totalSeconds: 0,
+          running: false,
+          history: {}, // key: yyyy-mm-dd string, value: seconds
+        };
+        tasks.push(newTask);
+        saveTasks();
+        renderTasks();
 
-        const left = document.createElement("div");
-        const nameInput = document.createElement("input");
-        nameInput.value = task.name;
-        nameInput.onchange = e => editName(task.id, e.target.value);
-        left.appendChild(nameInput);
-        left.innerHTML += `
-          <div class="time-label">Today: ${formatTime(task.todaySeconds)}</div>
-          <div class="time-label">Total: ${formatTime(task.seconds)}</div>
-        `;
+        // Clear inputs
+        taskNameInput.value = '';
+        taskTagsInput.value = '';
+        taskDueDateInput.value = '';
+      }
 
-        const controls = document.createElement("div");
-        controls.className = "controls";
-        const toggleBtn = document.createElement("button");
-        toggleBtn.innerText = task.running ? "Stop" : "Start";
-        toggleBtn.className = task.running ? "stop" : "start";
-        toggleBtn.onclick = () => toggleTimer(task.id);
+      function saveTasks() {
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+      }
+      function loadTasks() {
+        const saved = localStorage.getItem('tasks');
+        if (saved) {
+          tasks = JSON.parse(saved);
+        } else {
+          tasks = [];
+        }
+      }
 
-        const deleteBtn = document.createElement("button");
-        deleteBtn.innerText = "Delete";
-        deleteBtn.className = "delete";
-        deleteBtn.onclick = () => deleteTask(task.id);
+      function renderTasks() {
+        taskContainer.innerHTML = '';
+        if (tasks.length === 0) {
+          taskContainer.innerHTML = '<p>No tasks yet. Add one above!</p>';
+          return;
+        }
+        tasks.forEach(task => {
+          const taskEl = document.createElement('div');
+          taskEl.className = 'task-card';
+          taskEl.dataset.id = task.id;
 
-        controls.appendChild(toggleBtn);
-        controls.appendChild(deleteBtn);
+          // Task Info: Editable name, tags, due date
+          const taskInfo = document.createElement('div');
+          taskInfo.className = 'task-info';
 
-        div.appendChild(left);
-        div.appendChild(controls);
-        container.appendChild(div);
-      });
-    }
+          // Editable name
+          const nameInput = document.createElement('input');
+          nameInput.type = 'text';
+          nameInput.value = task.name;
+          nameInput.className = 'editable';
+          nameInput.dataset.field = 'name';
+          nameInput.setAttribute('aria-label', 'Task name');
 
-    setInterval(() => {
-      const today = new Date().toISOString().split("T")[0];
-      tasks.forEach(task => {
+          // Editable tags
+          const tagsInput = document.createElement('input');
+          tagsInput.type = 'text';
+          tagsInput.value = task.tags.join(', ');
+          tagsInput.className = 'editable';
+          tagsInput.dataset.field = 'tags';
+          tagsInput.setAttribute('aria-label', 'Task tags');
+
+          // Editable due date
+          const dueDateInput = document.createElement('input');
+          dueDateInput.type = 'date';
+          dueDateInput.value = task.dueDate || '';
+          dueDateInput.className = 'editable';
+          dueDateInput.dataset.field = 'dueDate';
+          dueDateInput.setAttribute('aria-label', 'Task due date');
+
+          // Total time formatted
+          const totalTimeLabel = document.createElement('div');
+          totalTimeLabel.className = 'time-labels';
+          totalTimeLabel.textContent = `Total Time: ${formatSeconds(task.totalSeconds)}`;
+
+          // Daily time for today
+          const todayKey = getTodayKey();
+          const todaySeconds = task.history[todayKey] || 0;
+          const todayLabel = document.createElement('div');
+          todayLabel.className = 'time-labels';
+          todayLabel.textContent = `Today: ${formatSeconds(todaySeconds)}`;
+
+          taskInfo.appendChild(nameInput);
+          taskInfo.appendChild(tagsInput);
+          taskInfo.appendChild(dueDateInput);
+          taskInfo.appendChild(totalTimeLabel);
+          taskInfo.appendChild(todayLabel);
+
+          // Controls: Start/Stop, Delete
+          const controls = document.createElement('div');
+          controls.className = 'task-controls';
+
+          const startStopBtn = document.createElement('button');
+          startStopBtn.textContent = task.running ? 'Stop' : 'Start';
+          startStopBtn.className = task.running ? 'btn-danger' : 'btn-primary';
+          startStopBtn.dataset.action = 'toggleTimer';
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.className = 'btn-secondary';
+          deleteBtn.dataset.action = 'deleteTask';
+
+          controls.appendChild(startStopBtn);
+          controls.appendChild(deleteBtn);
+
+          taskEl.appendChild(taskInfo);
+          taskEl.appendChild(controls);
+
+          taskContainer.appendChild(taskEl);
+        });
+      }
+
+      function formatSeconds(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+      }
+
+      function getTodayKey() {
+        const d = new Date();
+        return d.toISOString().slice(0,10); // yyyy-mm-dd
+      }
+
+      // Timer handling
+      function onTaskButtonClick(e) {
+        if (!e.target.dataset.action) return;
+        const action = e.target.dataset.action;
+        const taskId = e.target.closest('.task-card').dataset.id;
+
+        if (action === 'toggleTimer') {
+          toggleTimer(taskId);
+        } else if (action === 'deleteTask') {
+          deleteTask(taskId);
+        }
+      }
+
+      function toggleTimer(taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+
         if (task.running) {
-          task.seconds++;
-          if (task.lastDate !== today) {
-            task.todaySeconds = 1;
-            task.lastDate = today;
-          } else {
-            task.todaySeconds++;
+          stopTimer(task);
+        } else {
+          if (currentRunningTaskId && currentRunningTaskId !== taskId) {
+            // Prompt user to stop currently running task first
+            showModal('Please stop the currently running task before starting another.');
+            return;
           }
+          startTimer(task);
         }
-      });
-      saveTasks();
-      renderTasks();
-    }, 1000);
+        saveTasks();
+        renderTasks();
+      }
 
-    function exportCSV() {
-      let csv = "Task Name,Total Time (sec),Today Time (sec)\n";
-      tasks.forEach(t => {
-        csv += `"${t.name}",${t.seconds},${t.todaySeconds}\n`;
-      });
-      const blob = new Blob([csv], { type: "text/csv" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${username}_tasks.csv`;
-      link.click();
-    }
+      function startTimer(task) {
+        task.running = true;
+        currentRunningTaskId = task.id;
+        // Start interval
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          task.totalSeconds++;
+          // Update today history
+          const todayKey = getTodayKey();
+          if (!task.history[todayKey]) task.history[todayKey] = 0;
+          task.history[todayKey]++;
+          saveTasks();
+          updateTaskTimes(task.id);
+        }, 1000);
+      }
 
-    async function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.text(`Task Report for ${username}`, 10, 10);
-      let y = 20;
-      tasks.forEach((t, i) => {
-        doc.text(`${i + 1}. ${t.name}`, 10, y);
-        doc.text(`Total: ${formatTime(t.seconds)} | Today: ${formatTime(t.todaySeconds)}`, 10, y + 8);
-        y += 18;
-      });
-      doc.save(`${username}_tasks.pdf`);
-    }
+      function stopTimer(task) {
+        task.running = false;
+        currentRunningTaskId = null;
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
 
-    renderTasks();
+      function updateTaskTimes(taskId) {
+        const taskEl = taskContainer.querySelector(`.task-card[data-id="${taskId}"]`);
+        if (!taskEl) return;
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        const timeLabels = taskEl.querySelectorAll('.time-labels');
+        if (timeLabels.length >= 2) {
+          timeLabels[0].textContent = `Total Time: ${formatSeconds(task.totalSeconds)}`;
+          const todaySeconds = task.history[getTodayKey()] || 0;
+          timeLabels[1].textContent = `Today: ${formatSeconds(todaySeconds)}`;
+        }
+
+        // Also update button text if needed
+        const startStopBtn = taskEl.querySelector('button[data-action="toggleTimer"]');
+        if (startStopBtn) {
+          startStopBtn.textContent = task.running ? 'Stop' : 'Start';
+          startStopBtn.className = task.running ? 'btn-danger' : 'btn-primary';
+        }
+      }
+
+      function deleteTask(taskId) {
+        if (currentRunningTaskId === taskId) {
+          stopTimer(tasks.find(t => t.id === taskId));
+        }
+        tasks = tasks.filter(t => t.id !== taskId);
+        saveTasks();
+        renderTasks();
+      }
+
+      // Editing tasks live
+      function onTaskEdit(e) {
+        if (!e.target.classList.contains('editable')) return;
+        const input = e.target;
+        const field = input.dataset.field;
+        const taskId = input.closest('.task-card').dataset.id;
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        if (field === 'name') {
+          task.name = input.value.trim() || 'Unnamed Task';
+        } else if (field === 'tags') {
+          task.tags = input.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        } else if (field === 'dueDate') {
+          task.dueDate = input.value || null;
+        }
+        saveTasks();
+      }
+      function onTaskEditKeydown(e) {
+        if (e.key === 'Enter') {
+          e.target.blur();
+        }
+      }
+
+      // Export CSV
+      function exportCSV() {
+        if (tasks.length === 0) {
+          showModal('No tasks to export!');
+          return;
+        }
+        let csv = 'Task Name,Tags,Due Date,Total Time,Today Time\n';
+        tasks.forEach(task => {
+          const todaySeconds = task.history[getTodayKey()] || 0;
+          const line = [
+            `"${task.name.replace(/"/g, '""')}"`,
+            `"${task.tags.join(', ').replace(/"/g, '""')}"`,
+            task.dueDate || '',
+            formatSeconds(task.totalSeconds),
+            formatSeconds(todaySeconds),
+          ].join(',');
+          csv += line + '\n';
+        });
+        downloadFile('tasks_export.csv', csv, 'text/csv');
+      }
+
+      // Export PDF (simple table)
+      async function exportPDF() {
+        if (tasks.length === 0) {
+          showModal('No tasks to export!');
+          return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        doc.setFontSize(16);
+        doc.text(`Task Timer Export - ${username}`, pageWidth / 2, 15, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth / 2, 23, { align: 'center' });
+
+        // Table headers
+        const headers = ['Task Name', 'Tags', 'Due Date', 'Total Time', 'Today Time'];
+        const startY = 30;
+        let y = startY;
+        const lineHeight = 8;
+        doc.setFont('helvetica', 'bold');
+        headers.forEach((header, i) => {
+          doc.text(header, 10 + i * 38, y);
+        });
+
+        doc.setFont('helvetica', 'normal');
+        y += lineHeight;
+
+        tasks.forEach(task => {
+          const todaySeconds = task.history[getTodayKey()] || 0;
+          const row = [
+            task.name,
+            task.tags.join(', '),
+            task.dueDate || '',
+            formatSeconds(task.totalSeconds),
+            formatSeconds(todaySeconds),
+          ];
+          row.forEach((cell, i) => {
+            // Simple text wrap for task name & tags
+            let text = cell.toString();
+            if (text.length > 20 && (i === 0 || i === 1)) {
+              text = text.slice(0, 17) + '...';
+            }
+            doc.text(text, 10 + i * 38, y);
+          });
+          y += lineHeight;
+          // New page if necessary
+          if (y > 280) {
+            doc.addPage();
+            y = startY;
+          }
+        });
+        doc.save('tasks_export.pdf');
+      }
+
+      function downloadFile(filename, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // Initialize app
+      init();
+    })();
   </script>
 </body>
 </html>
