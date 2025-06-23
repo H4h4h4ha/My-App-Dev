@@ -184,7 +184,7 @@
       const name = document.getElementById("taskName").value.trim();
       if (!name) return alert("Task name is required");
       const today = new Date().toISOString().split("T")[0];
-      const task = { id: Date.now(), name, seconds: 0, todaySeconds: 0, lastDate: today, running: false };
+      const task = { id: Date.now(), name, seconds: 0, todaySeconds: 0, lastDate: today, running: false, startedAt: null, endedAt: null };
       tasks.push(task);
       saveTasks();
       renderTasks();
@@ -194,6 +194,15 @@
     function toggleTimer(id) {
       const task = tasks.find(t => t.id === id);
       task.running = !task.running;
+      if  (task.running) {
+        task.running = false;
+        task.endedAt = now;
+      }
+      else{
+        task.running = true;
+        task.startedAt = now;
+        task.endedAt = null;
+      }
       saveTasks();
       renderTasks();
     }
@@ -233,6 +242,8 @@
         left.innerHTML += `
           <div class="time-label">Today: ${formatTime(task.todaySeconds)}</div>
           <div class="time-label">Total: ${formatTime(task.seconds)}</div>
+          ${task.startedAt ? `<div class="time-label">Started: ${task.startedAt}</div>` : ""}
+          ${task.endedAt ? `<div class="time-label">Ended: ${task.endedAt}</div>` : ""}
         `;
 
         const controls = document.createElement("div");
@@ -317,4 +328,3 @@ updateClockAndGlobalTimer(); // Initial display
 </body>
 </html>
 
-```
