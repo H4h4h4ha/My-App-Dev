@@ -1,3 +1,23 @@
+You’ve got a well-structured task tracker app! To fulfill your request, I’ll add:
+
+1. **A sidebar** that displays:
+
+   * The **current time** (updated in real-time).
+   * A **big-font timer** showing total elapsed tracked time (across all running tasks).
+
+2. **Modifications to HTML/CSS/JS** to support this addition.
+
+---
+
+### ✅ Here’s the updated **HTML + CSS + JS** with the new sidebar feature:
+
+> 🆕 Additions are marked with comments like `<!-- Added: Real-time Sidebar -->`.
+
+---
+
+### 🔧 FULL UPDATED CODE (with sidebar timer & clock):
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,15 +32,41 @@
       color: #333;
       margin: 0;
       padding: 1rem;
+      display: flex;
+      gap: 1rem;
     }
     .container {
+      flex: 3;
       max-width: 850px;
-      margin: auto;
       background: #fff;
       padding: 1.5rem;
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.08);
     }
+
+    /* Added: Sidebar */
+    .sidebar {
+      flex: 1;
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .sidebar .clock {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .sidebar .global-timer {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #4f46e5;
+    }
+
     .header {
       display: flex;
       justify-content: space-between;
@@ -96,9 +142,9 @@
     .stop { background: #ef4444; color: white; }
     .delete { background: #ccc; }
     .time-label { color: #555; font-size: 0.9rem; }
-    @media (max-width: 600px) {
-      .task { flex-direction: column; align-items: flex-start; }
-      .controls { margin-top: 0.5rem; }
+    @media (max-width: 900px) {
+      body { flex-direction: column; }
+      .sidebar { order: -1; }
     }
   </style>
 </head>
@@ -121,6 +167,12 @@
     </div>
 
     <div id="taskContainer"></div>
+  </div>
+
+  <!-- Added: Real-time Sidebar -->
+  <div class="sidebar">
+    <div class="clock" id="clockDisplay">--:--:--</div>
+    <div class="global-timer" id="globalTimer">0h 0m 0s</div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -184,7 +236,6 @@
       const today = new Date().toISOString().split("T")[0];
 
       tasks.forEach(task => {
-        // Reset today's time if date has changed
         if (task.lastDate !== today) {
           task.todaySeconds = 0;
           task.lastDate = today;
@@ -224,49 +275,67 @@
       });
     }
 
-    setInterval(() => {
-      const today = new Date().toISOString().split("T")[0];
-      tasks.forEach(task => {
-        if (task.running) {
-          task.seconds++;
-          if (task.lastDate !== today) {
-            task.todaySeconds = 1;
-            task.lastDate = today;
-          } else {
-            task.todaySeconds++;
-          }
-        }
-      });
-      saveTasks();
-      renderTasks();
-    }, 1000);
+    // Clock + Global Timer
+    function updateClockAndGlobalTimer() {
+      const now = new Date();
+      document.getElementById("clockDisplay").innerText = now.toLocaleTimeString();
 
-    function exportCSV() {
-      let csv = "Task Name,Total Time (sec),Today Time (sec)\n";
-      tasks.forEach(t => {
-        csv += `"${t.name}",${t.seconds},${t.todaySeconds}\n`;
-      });
-      const blob = new Blob([csv], { type: "text/csv" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${username}_tasks.csv`;
-      link.click();
+// Calculate total active running time across all tasks
+const totalRunningSeconds = tasks
+  .filter(t => t.running)
+  .reduce((sum, t) => sum + t.todaySeconds, 0);
+
+document.getElementById("globalTimer").innerText = formatTime(totalRunningSeconds);
+}
+
+// Update every second
+setInterval(() => {
+const today = new Date().toISOString().split("T")[0];
+tasks.forEach(task => {
+  if (task.running) {
+    task.seconds++;
+    if (task.lastDate !== today) {
+      task.todaySeconds = 1;
+      task.lastDate = today;
+    } else {
+      task.todaySeconds++;
     }
+  }
+});
+saveTasks();
+renderTasks();
+updateClockAndGlobalTimer(); // Also update sidebar display
+}, 1000);
 
-    async function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.text(`Task Report for ${username}`, 10, 10);
-      let y = 20;
-      tasks.forEach((t, i) => {
-        doc.text(`${i + 1}. ${t.name}`, 10, y);
-        doc.text(`Total: ${formatTime(t.seconds)} | Today: ${formatTime(t.todaySeconds)}`, 10, y + 8);
-        y += 18;
-      });
-      doc.save(`${username}_tasks.pdf`);
-    }
+function exportCSV() {
+let csv = "Task Name,Total Time (sec),Today Time (sec)\n";
+tasks.forEach(t => {
+  csv += `"${t.name}",${t.seconds},${t.todaySeconds}\n`;
+});
+const blob = new Blob([csv], { type: "text/csv" });
+const link = document.createElement("a");
+link.href = URL.createObjectURL(blob);
+link.download = `${username}_tasks.csv`;
+link.click();
+}
 
-    renderTasks();
-  </script>
+async function exportPDF() {
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF();
+doc.text(`Task Report for ${username}`, 10, 10);
+let y = 20;
+tasks.forEach((t, i) => {
+  doc.text(`${i + 1}. ${t.name}`, 10, y);
+  doc.text(`Total: ${formatTime(t.seconds)} | Today: ${formatTime(t.todaySeconds)}`, 10, y + 8);
+  y += 18;
+});
+doc.save(`${username}_tasks.pdf`);
+}
+
+renderTasks();
+updateClockAndGlobalTimer(); // Initial display
+</script>
 </body>
 </html>
+
+```
