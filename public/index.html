@@ -39,11 +39,11 @@
       gap: 1rem;
     }
     .sidebar .clock {
-      font-size: 1.5rem;
+      font-size: 2rem;
       font-weight: bold;
     }
     .sidebar .global-timer {
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: bold;
       color: #4f46e5;
     }
@@ -122,7 +122,7 @@
     .start { background: #22c55e; color: white; }
     .stop { background: #ef4444; color: white; }
     .delete { background: #ccc; }
-    .time-label { color: #555; font-size: 0.9rem; }
+    .time-label { color: #555; font-size: 1.3rem; font-weight: bold; }
     @media (max-width: 900px) {
       body { flex-direction: column; }
       .sidebar { order: -1; }
@@ -262,9 +262,7 @@
       document.getElementById("clockDisplay").innerText = now.toLocaleTimeString();
 
 // Calculate total active running time across all tasks
-const totalRunningSeconds = tasks
-  .filter(t => t.running)
-  .reduce((sum, t) => sum + t.todaySeconds, 0);
+const totalRunningSeconds = tasks.reduce((sum, t) => sum + t.todaySeconds, 0);
 
 document.getElementById("globalTimer").innerText = formatTime(totalRunningSeconds);
 }
